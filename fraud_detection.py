@@ -19,6 +19,16 @@ if __name__ == "__main__":
     job_a = {"start_date": "June 2022", "end_date": None}
     job_b = {"start_date": "August 2019", "end_date": "May 2022"}
     job_c = {"start_date": "July 2018", "end_date": "August 2019"}
+    job_d = {"start_date": "January 2021", "end_date": "December 2021"}
+    job_e = {"start_date": "June 2021", "end_date": "May 2022"}
+    sam_job_a = {"start_date": "January 2022", "end_date": None}
+    sam_job_b = {"start_date": "June 2021", "end_date": "December 2021"}
+    alex_job_a = {"start_date": "March 2021", "end_date": None}
+    alex_job_b = {"start_date": "July 2019", "end_date": "February 2021"}
+
 
     print("A vs B:", jobs_overlap(job_a, job_b))
     print("B vs C:", jobs_overlap(job_b, job_c))
+    print("D vs E:", jobs_overlap(job_d, job_e))
+    print("Sam A vs B:", jobs_overlap(sam_job_a, sam_job_b))
+    print("Alex A vs B:", jobs_overlap(alex_job_a, alex_job_b))

@@ -14,21 +14,26 @@ def jobs_overlap(job_a, job_b):
 
     return a_start < b_end and b_start < a_end
 
+def check_all_overlaps(job_history):
+    overlapping_pairs = []
+    for i in range(len(job_history)):
+        for j in range(i + 1, len(job_history)):
+            if jobs_overlap(job_history[i], job_history[j]):
+                overlapping_pairs.append((job_history[i], job_history[j]))
+    return overlapping_pairs
+
 
 if __name__ == "__main__":
-    job_a = {"start_date": "June 2022", "end_date": None}
-    job_b = {"start_date": "August 2019", "end_date": "May 2022"}
-    job_c = {"start_date": "July 2018", "end_date": "August 2019"}
-    job_d = {"start_date": "January 2021", "end_date": "December 2021"}
-    job_e = {"start_date": "June 2021", "end_date": "May 2022"}
-    sam_job_a = {"start_date": "January 2022", "end_date": None}
-    sam_job_b = {"start_date": "June 2021", "end_date": "December 2021"}
-    alex_job_a = {"start_date": "March 2021", "end_date": None}
-    alex_job_b = {"start_date": "July 2019", "end_date": "February 2021"}
+    jordan_jobs = [
+        {"title": "Senior Software Engineer", "employer": "Brightpath Systems", "start_date": "June 2022", "end_date": None},
+        {"title": "Software Engineer", "employer": "Alden Data Co.", "start_date": "August 2019", "end_date": "May 2022"},
+        {"title": "Junior Developer", "employer": "Alden Data Co.", "start_date": "July 2018", "end_date": "August 2019"}
+    ]
+    print("Jordan overlaps (expect []):", check_all_overlaps(jordan_jobs))
 
-
-    print("A vs B:", jobs_overlap(job_a, job_b))
-    print("B vs C:", jobs_overlap(job_b, job_c))
-    print("D vs E:", jobs_overlap(job_d, job_e))
-    print("Sam A vs B:", jobs_overlap(sam_job_a, sam_job_b))
-    print("Alex A vs B:", jobs_overlap(alex_job_a, alex_job_b))
+    test_history_with_overlap = [
+        {"title": "Role 1", "employer": "Company X", "start_date": "January 2020", "end_date": "December 2020"},
+        {"title": "Role 2", "employer": "Company Y", "start_date": "June 2020", "end_date": "May 2021"},
+        {"title": "Role 3", "employer": "Company Z", "start_date": "June 2021", "end_date": None}
+    ]
+    print("Test overlaps (expect 1 pair, Role 1 vs Role 2):", check_all_overlaps(test_history_with_overlap))

@@ -37,3 +37,15 @@ if __name__ == "__main__":
         {"title": "Role 3", "employer": "Company Z", "start_date": "June 2021", "end_date": None}
     ]
     print("Test overlaps (expect 1 pair, Role 1 vs Role 2):", check_all_overlaps(test_history_with_overlap))
+
+    single_job_history = [
+        {"title": "Only Role", "employer": "Company Q", "start_date": "January 2022", "end_date": None}
+    ]
+    print("Single job overlaps (expect []):", check_all_overlaps(single_job_history))
+
+    double_overlap_history = [
+        {"title": "Role A", "employer": "Company 1", "start_date": "January 2020", "end_date": "December 2020"},
+        {"title": "Role B", "employer": "Company 2", "start_date": "September 2020", "end_date": "August 2021"},
+        {"title": "Role C", "employer": "Company 3", "start_date": "June 2021", "end_date": None}
+    ]
+    print("Double overlap (expect 2 pairs, A-B and B-C):", check_all_overlaps(double_overlap_history))   

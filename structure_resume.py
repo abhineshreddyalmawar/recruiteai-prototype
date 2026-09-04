@@ -20,6 +20,7 @@ resume_tool = {
                 "type": "array",
                 "items": {"type": "string"}
             },
+            "summary": {"type": ["string", "null"]},
             "job_history": {
                 "type": "array",
                 "items": {
@@ -34,7 +35,7 @@ resume_tool = {
                 }
             }
         },
-        "required": ["full_name", "email", "phone", "skills", "job_history"]
+        "required": ["full_name", "email", "phone", "skills", "job_history", "summary"]
     }
 }
 

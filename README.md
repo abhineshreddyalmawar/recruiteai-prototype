@@ -1,6 +1,6 @@
-# RecruiteAI Prototype
+# VerifyHire Prototype
 
-An AI-assisted resume screening pipeline built for TechClub Inc. — resume parsing, fraud detection, and candidate matching, powered by Claude's tool-use and structured JSON schemas.
+An AI-assisted resume screening pipeline built for Northline Talent Systems — resume parsing, fraud detection, and candidate matching, powered by Claude's tool-use and structured JSON schemas.
 
 **Status:** Prototype in active development. Fraud Detection module complete as of Sep 5, 2026 (checkpoint 1 of 2). Not production software — see [Scope](#scope-prd-vs-prototype) below.
 
@@ -71,4 +71,4 @@ Progress is tracked by work item (16 total across the full prototype), not calen
 
 ---
 
-*Private repository — TechClub Inc. internal prototype.*
+*Public repository — Northline Talent Systems prototype.*

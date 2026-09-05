@@ -12,6 +12,25 @@ def parse_date(date_str):
         return datetime.max
     return datetime.strptime(date_str, "%B %Y")
 
+def months_between(date_a, date_b):
+    delta = date_b - date_a
+    return delta.days / 30.44
+
+def check_title_progression(job_history):
+    sorted_jobs = sorted(job_history, key=lambda job: parse_date(job["start_date"]))
+    progression_data = []
+    for i in range(len(sorted_jobs) - 1):
+        job_a = sorted_jobs[i]
+        job_b = sorted_jobs[i + 1]
+        gap_months = months_between(parse_date(job_a["start_date"]), parse_date(job_b["start_date"]))
+        progression_data.append({
+            "from_title": job_a["title"],
+            "to_title": job_b["title"],
+            "months_between": round(gap_months, 1)
+        })
+    return progression_data
+
+
 def total_career_years(job_history):
     earliest_start = min(parse_date(job["start_date"]) for job in job_history)
     latest_end = max(
@@ -90,6 +109,76 @@ Only flag genuine issues. If everything is plausible, return an empty flags list
     )
     return response.content[0].input
 
+title_progression_tool = {
+    "name": "check_title_progression",
+    "description": "Flag unusually fast title progressions given precomputed month gaps between roles.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "flags": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "from_title": {"type": "string"},
+                        "to_title": {"type": "string"},
+                        "months_between": {"type": "number"},
+                        "explanation": {"type": "string"},
+                        "confidence": {
+                            "type": "string",
+                            "enum": ["high", "medium", "low"]
+                        }
+                    },
+                    "required": ["from_title", "to_title", "months_between", "explanation", "confidence"]
+                }
+            }
+        },
+        "required": ["flags"]
+    }
+}
+def check_title_progression_flags(job_history):
+    progression_data = check_title_progression(job_history)
+
+    prompt = f"""Given this sequence of consecutive job title transitions with precomputed month gaps, flag any that represent an unusually fast or implausible progression.
+
+Progression data: {progression_data}
+
+A fast promotion is not automatically suspicious — context like company size or exceptional performance can explain it. Only flag transitions that would genuinely warrant a closer look, and explain your reasoning for the confidence level you assign.
+
+If everything looks reasonable, return an empty flags list."""
+
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1024,
+        tools=[title_progression_tool],
+        tool_choice={"type": "tool", "name": "check_title_progression"},
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.content[0].input
+
+def generate_fraud_scorecard(resume_data):
+    job_history = resume_data["job_history"]
+
+    overlaps = check_all_overlaps(job_history)
+    tech_flags = check_tech_stack_plausibility(
+        skills=resume_data["skills"],
+        job_history=job_history,
+        summary=resume_data["summary"],
+        career_years=total_career_years(job_history)
+    )["flags"]
+    title_flags = check_title_progression_flags(job_history)["flags"]
+
+    high_confidence_flags = [f for f in tech_flags + title_flags if f["confidence"] == "high"]
+    overall_risk = "review_recommended" if (overlaps or high_confidence_flags) else "clear"
+
+    return {
+        "candidate": resume_data["full_name"],
+        "overall_risk": overall_risk,
+        "timeline_overlaps": overlaps,
+        "tech_stack_flags": tech_flags,
+        "title_progression_flags": title_flags
+    }
+
 
 if __name__ == "__main__":
     jordan_jobs = [
@@ -116,7 +205,7 @@ if __name__ == "__main__":
         {"title": "Role B", "employer": "Company 2", "start_date": "September 2020", "end_date": "August 2021"},
         {"title": "Role C", "employer": "Company 3", "start_date": "June 2021", "end_date": None}
     ]
-    print("Double overlap (expect 2 pairs, A-B and B-C):", check_all_overlaps(double_overlap_history))   
+    print("Double overlap (expect 2 pairs, A-B and B-C):", check_all_overlaps(double_overlap_history))
 
     print("\nJordan tech stack check (expect []):")
     print(check_tech_stack_plausibility(
@@ -158,3 +247,28 @@ if __name__ == "__main__":
         summary="Backend developer with experience in modern JavaScript tooling.",
         career_years=total_career_years(obscure_tech_jobs)
     ))
+
+    print("\nFast promotion check (expect flagged, high confidence):")
+    fast_promotion_jobs = [
+        {"title": "Junior Developer", "employer": "Company A", "start_date": "January 2023", "end_date": "March 2023"},
+        {"title": "Senior Software Engineer", "employer": "Company A", "start_date": "March 2023", "end_date": None}
+    ]
+    print(check_title_progression_flags(fast_promotion_jobs))
+
+    print("\nJordan full scorecard (expect overall_risk: clear):")
+    jordan_resume_data = {
+        "full_name": "Jordan Lee",
+        "summary": "Backend-focused software engineer with 5 years of experience building REST APIs and cloud-deployed services. Comfortable across Python, Java, and AWS infrastructure.",
+        "skills": ["Python", "Java", "Flask", "Spring Boot", "AWS (Lambda, EC2, S3)", "Docker", "Jenkins", "PostgreSQL", "REST APIs", "Git", "Selenium", "pytest"],
+        "job_history": jordan_jobs
+    }
+    print(generate_fraud_scorecard(jordan_resume_data))
+
+    print("\nFast promotion candidate scorecard (expect overall_risk: review_recommended):")
+    fast_promotion_resume = {
+        "full_name": "Test Candidate",
+        "summary": "Experienced engineer.",
+        "skills": ["Python"],
+        "job_history": fast_promotion_jobs
+    }
+    print(generate_fraud_scorecard(fast_promotion_resume))

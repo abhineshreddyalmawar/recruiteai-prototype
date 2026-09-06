@@ -109,7 +109,7 @@ Only flag genuine issues. If everything is plausible, return an empty flags list
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1024,
+        max_tokens=2048,
         tools=[tech_stack_tool],
         tool_choice={"type": "tool", "name": "check_tech_stack_plausibility"},
         messages=[{"role": "user", "content": prompt}]
@@ -156,7 +156,7 @@ If everything looks reasonable, return an empty flags list."""
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1024,
+        max_tokens=2048,
         tools=[title_progression_tool],
         tool_choice={"type": "tool", "name": "check_title_progression"},
         messages=[{"role": "user", "content": prompt}]

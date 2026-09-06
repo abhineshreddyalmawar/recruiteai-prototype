@@ -37,7 +37,7 @@ Job description text:
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1024,
+        max_tokens=2048,
         tools=[job_description_tool],
         tool_choice={"type": "tool", "name": "structure_job_description"},
         messages=[{"role": "user", "content": prompt}]
@@ -99,7 +99,7 @@ Score each category 0-100, with a short explanation for each:
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1024,
+        max_tokens=2048,
         tools=[matching_tool],
         tool_choice={"type": "tool", "name": "score_candidate_match"},
         messages=[{"role": "user", "content": prompt}]

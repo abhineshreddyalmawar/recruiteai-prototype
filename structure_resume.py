@@ -42,7 +42,7 @@ resume_tool = {
 def structure_resume(resume_text):
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1024,
+        max_tokens=2048,
         tools=[resume_tool],
         tool_choice={"type": "tool", "name": "extract_resume_data"},
         messages=[

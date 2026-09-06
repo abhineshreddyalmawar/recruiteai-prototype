@@ -10,7 +10,13 @@ from datetime import datetime
 def parse_date(date_str):
     if date_str is None:
         return datetime.max
-    return datetime.strptime(date_str, "%B %Y")
+    try:
+        return datetime.strptime(date_str, "%B %Y")
+    except (ValueError, TypeError):
+        return None
+
+def has_valid_start_date(job):
+    return parse_date(job["start_date"]) is not None
 
 def months_between(date_a, date_b):
     delta = date_b - date_a
@@ -32,6 +38,7 @@ def check_title_progression(job_history):
 
 
 def total_career_years(job_history):
+    job_history = [job for job in job_history if has_valid_start_date(job)]
     if not job_history:
         return None
     earliest_start = min(parse_date(job["start_date"]) for job in job_history)
@@ -40,7 +47,6 @@ def total_career_years(job_history):
         for job in job_history
     )
     return (latest_end - earliest_start).days / 365.25
-
 
 def jobs_overlap(job_a, job_b):
     a_start = parse_date(job_a["start_date"])
@@ -51,6 +57,7 @@ def jobs_overlap(job_a, job_b):
     return a_start < b_end and b_start < a_end
 
 def check_all_overlaps(job_history):
+    job_history = [job for job in job_history if has_valid_start_date(job)]
     overlapping_pairs = []
     for i in range(len(job_history)):
         for j in range(i + 1, len(job_history)):
@@ -103,7 +110,7 @@ Job History: {job_history}
 
 Check for:
 1. A technology claimed that didn't exist yet at the time of a job (technology_predates_release)
-2. A claimed duration in the summary or skills that EXCEEDS the career span (implausible_duration) — only flag OVERSTATED experience, never understated experience. If career span could not be determined, do NOT flag duration issues at all.
+2. A claimed duration in the summary or skills that EXCEEDS the career span (implausible_duration) — only flag OVERSTATED experience. If the claimed duration is EQUAL TO or LESS THAN the actual career span, this is not an issue at all — do not create a flag entry for it, do not mention it, treat it exactly as if it were never noticed.
 
 Only flag genuine issues. If everything is plausible, return an empty flags list."""
 
@@ -144,6 +151,7 @@ title_progression_tool = {
     }
 }
 def check_title_progression_flags(job_history):
+    job_history = [job for job in job_history if has_valid_start_date(job)]
     progression_data = check_title_progression(job_history)
 
     prompt = f"""Given this sequence of consecutive job title transitions with precomputed month gaps, flag any that represent an unusually fast or implausible progression.

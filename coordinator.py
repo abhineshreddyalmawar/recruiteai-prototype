@@ -1,10 +1,10 @@
-from extract_text import extract_text_from_pdf
+from extract_text import extract_text_from_resume
 from structure_resume import structure_resume
 from fraud_detection import generate_fraud_scorecard
 from matching import structure_job_description, score_candidate_match, compute_overall_score
 
 def process_one_resume(resume_path, structured_jd):
-    raw_text = extract_text_from_pdf(resume_path)
+    raw_text = extract_text_from_resume(resume_path)
     resume_data = structure_resume(raw_text)
     fraud_scorecard = generate_fraud_scorecard(resume_data)
     scores = score_candidate_match(resume_data, structured_jd)

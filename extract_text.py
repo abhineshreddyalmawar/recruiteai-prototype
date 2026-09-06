@@ -6,5 +6,6 @@ def extract_text_from_pdf(filepath):
         for page in pdf.pages:
             text += page.extract_text()
     return text
-result = extract_text_from_pdf("sample_resume_jordan_lee.pdf")
-print(result)
+if __name__ == "__main__":
+    result = extract_text_from_pdf("sample_resume_jordan_lee.pdf")
+    print(result)

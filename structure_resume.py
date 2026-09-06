@@ -39,8 +39,7 @@ resume_tool = {
     }
 }
 
-if __name__ == "__main__":
-    resume_text = extract_text_from_pdf("sample_resume_jordan_lee.pdf")
+def structure_resume(resume_text):
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1024,
@@ -50,6 +49,9 @@ if __name__ == "__main__":
             {"role": "user", "content": f"Extract structured data from this resume:\n\n{resume_text}"}
         ]
     )
-    tool_use_block = response.content[0]
-    extracted_data = tool_use_block.input
-    print(extracted_data)
+    return response.content[0].input
+
+
+if __name__ == "__main__":
+    resume_text = extract_text_from_pdf("sample_resume_jordan_lee.pdf")
+    print(structure_resume(resume_text))

@@ -32,6 +32,8 @@ def check_title_progression(job_history):
 
 
 def total_career_years(job_history):
+    if not job_history:
+        return None
     earliest_start = min(parse_date(job["start_date"]) for job in job_history)
     latest_end = max(
         datetime.now() if job["end_date"] is None else parse_date(job["end_date"])
@@ -87,16 +89,21 @@ tech_stack_tool = {
 }
 
 def check_tech_stack_plausibility(skills, job_history, summary, career_years):
+    if career_years is None:
+        career_context = "Career span could not be determined (no job history extracted) — do not attempt to judge claimed years of experience."
+    else:
+        career_context = f"Total career span (already calculated): {career_years:.1f} years"
+
     prompt = f"""Given this candidate's claimed skills, summary, and job history, identify any implausible claims.
 
 Skills: {skills}
 Summary: {summary}
 Job History: {job_history}
-Total career span (already calculated): {career_years:.1f} years
+{career_context}
 
 Check for:
 1. A technology claimed that didn't exist yet at the time of a job (technology_predates_release)
-2. A claimed duration in the summary or skills that EXCEEDS {career_years:.1f} years (implausible_duration) — only flag OVERSTATED experience, never understated experience.
+2. A claimed duration in the summary or skills that EXCEEDS the career span (implausible_duration) — only flag OVERSTATED experience, never understated experience. If career span could not be determined, do NOT flag duration issues at all.
 
 Only flag genuine issues. If everything is plausible, return an empty flags list."""
 
@@ -158,15 +165,16 @@ If everything looks reasonable, return an empty flags list."""
 
 def generate_fraud_scorecard(resume_data):
     job_history = resume_data["job_history"]
+    career_years = total_career_years(job_history)
 
     overlaps = check_all_overlaps(job_history)
     tech_flags = check_tech_stack_plausibility(
         skills=resume_data["skills"],
         job_history=job_history,
         summary=resume_data["summary"],
-        career_years=total_career_years(job_history)
+        career_years=career_years
     )["flags"]
-    title_flags = check_title_progression_flags(job_history)["flags"]
+    title_flags = check_title_progression_flags(job_history)["flags"] if len(job_history) >= 2 else []
 
     high_confidence_flags = [f for f in tech_flags + title_flags if f["confidence"] == "high"]
     overall_risk = "review_recommended" if (overlaps or high_confidence_flags) else "clear"
@@ -174,6 +182,7 @@ def generate_fraud_scorecard(resume_data):
     return {
         "candidate": resume_data["full_name"],
         "overall_risk": overall_risk,
+        "career_years_known": career_years is not None,
         "timeline_overlaps": overlaps,
         "tech_stack_flags": tech_flags,
         "title_progression_flags": title_flags
